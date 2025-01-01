@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -12,7 +13,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::orderByDesc('id')->get();
+        
+        return view('admin.categories.index', compact('categories'));
     }
 
     /**
@@ -20,7 +23,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.categories.create');
     }
 
     /**
@@ -28,7 +31,25 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'icon' => ['required', 'image', 'mimes:png,jpg,jpeg,svg'],
+        ]);
+
+        if ($request->hasFile('icon')) {
+            $iconPath = $request->file('icon')->store('icons', 'public');
+        } else {
+            $iconPath = 'images/icon-default.png';
+        }
+
+        // Category::create($request->all());
+        Category::create([
+            'name' => $request->name,
+            'icon' => $iconPath,
+            'slug' => Str::slug($request->name),
+        ]);
+
+        return redirect()->route('admin.categories.index');
     }
 
     /**
